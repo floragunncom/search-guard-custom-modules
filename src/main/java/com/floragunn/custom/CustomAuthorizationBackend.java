@@ -38,7 +38,7 @@ public class CustomAuthorizationBackend implements AuthorizationBackend {
 
     @Override
     public void fillRoles(final User user, final AuthCredentials authCreds) {
-        user.addRole("customrole");
+        user.addRole(user.getName());
     }
 
 }

@@ -46,26 +46,15 @@ public class CustomHttpAuthenticator implements HTTPAuthenticator {
 	@Override
 	public AuthCredentials extractCredentials(RestRequest request, ThreadContext context) throws ElasticsearchSecurityException {
 		
-        final SecurityManager sm = System.getSecurityManager();
-
-        if (sm != null) {
-            sm.checkPermission(new SpecialPermission());
-        }
-
-        AuthCredentials creds = AccessController.doPrivileged(new PrivilegedAction<AuthCredentials>() {
-            @Override
-            public AuthCredentials run() {                        
-            	String username = request.param("username");
-            	if (username != null && username.length() > 0) {
-            		return new AuthCredentials(username, new String[0]);	
-            	}
-            	else {
-            		return null;
-            	}
-            }
-        });
-        
-        return creds;
+    	String username = request.param("username");
+    	if (username != null && username.length() > 0) {
+    		AuthCredentials credentials = new AuthCredentials(username, new String[0]);
+    		credentials.markComplete();
+    		return credentials;
+    	}
+    	else {
+    		return null;
+    	}
 		
 	}
 

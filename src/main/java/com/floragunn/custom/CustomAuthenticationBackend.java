@@ -33,7 +33,7 @@ public class CustomAuthenticationBackend implements AuthenticationBackend {
 
     @Override
     public String getType() {
-        return "noop";
+        return "CustomAuthenticationBackend";
     }
 
     @Override

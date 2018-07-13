@@ -16,12 +16,12 @@
  */
 package com.floragunn.custom;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchSecurityException;
-import org.elasticsearch.SpecialPermission;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.rest.RestChannel;
@@ -33,9 +33,14 @@ import com.floragunn.searchguard.user.AuthCredentials;
 public class CustomHttpAuthenticator implements HTTPAuthenticator {
 	
 	private final Settings settings;
+	private final String USERNAME_PARAM_NAME;
+	private final String PASSWORD_PARAM_NAME;
+	protected final Logger log = LogManager.getLogger(this.getClass());
 	
     public CustomHttpAuthenticator(final Settings settings, final Path configPath) {
     	this.settings = settings;
+    	this.USERNAME_PARAM_NAME = settings.get("username_param_name", "username");
+    	this.PASSWORD_PARAM_NAME = settings.get("password_param_name", "password");
     }
 
 	@Override
@@ -46,16 +51,23 @@ public class CustomHttpAuthenticator implements HTTPAuthenticator {
 	@Override
 	public AuthCredentials extractCredentials(RestRequest request, ThreadContext context) throws ElasticsearchSecurityException {
 		
-    	String username = request.param("username");
-    	if (username != null && username.length() > 0) {
-    		AuthCredentials credentials = new AuthCredentials(username, new String[0]);
-    		credentials.markComplete();
-    		return credentials;
+		String username = request.hasParam(USERNAME_PARAM_NAME) ? request.param(USERNAME_PARAM_NAME) : null;
+		byte[] password = request.hasParam(PASSWORD_PARAM_NAME) ? request.param(PASSWORD_PARAM_NAME).getBytes(StandardCharsets.UTF_8) : null;
+    	
+    	if (username != null && username.length() > 0 && password != null) {
+    		
+    		if(password != null && password.length > 0) {
+    			AuthCredentials credentials = new AuthCredentials(username, password);
+	    		credentials.markComplete();
+	    		return credentials;
+    		}
+    		else {
+    			log.trace("Password can not be empty");
+    			return null;
+    		}
     	}
-    	else {
-    		return null;
-    	}
-		
+		log.trace("Username can not be empty");
+		return null;
 	}
 
 	@Override

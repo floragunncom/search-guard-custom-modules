@@ -50,12 +50,11 @@ public class CustomAuthorizationBackend implements AuthorizationBackend {
 
     @Override
     public void fillRoles(final User user, final AuthCredentials credentials) {
-        if(users.containsKey(user.getName())) {
+        if(user != null && users.containsKey(user.getName())) {
         	user.addRoles(users.get(user.getName()));
         	return;
         }
-        
-        log.trace("Can not add roles. User {} is unknown", user.getName());
+        log.info("Can not add roles. User {} is unknown", user.getName());
     }
     
     private void addUser(String name, String ...roles) {

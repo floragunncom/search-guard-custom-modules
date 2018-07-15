@@ -18,14 +18,17 @@ package com.floragunn.custom;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Base64;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchSecurityException;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.concurrent.ThreadContext;
+import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
 import org.elasticsearch.rest.RestRequest;
+import org.elasticsearch.rest.RestStatus;
 
 import com.floragunn.searchguard.auth.HTTPAuthenticator;
 import com.floragunn.searchguard.user.AuthCredentials;
@@ -34,13 +37,15 @@ public class CustomHttpAuthenticator implements HTTPAuthenticator {
 	
 	private final Settings settings;
 	private final String USERNAME_PARAM_NAME;
-	private final String PASSWORD_PARAM_NAME;
+	private final String PASSWORD_HEADER_NAME;
+	private final boolean USE_64_ENCODED_PASSWORD;
 	protected final Logger log = LogManager.getLogger(this.getClass());
 	
     public CustomHttpAuthenticator(final Settings settings, final Path configPath) {
     	this.settings = settings;
     	this.USERNAME_PARAM_NAME = settings.get("username_param_name", "username");
-    	this.PASSWORD_PARAM_NAME = settings.get("password_param_name", "password");
+    	this.PASSWORD_HEADER_NAME = settings.get("password_header_name", "password");
+    	this.USE_64_ENCODED_PASSWORD = settings.getAsBoolean("use_64_encoded_password", false);
     }
 
 	@Override
@@ -51,8 +56,14 @@ public class CustomHttpAuthenticator implements HTTPAuthenticator {
 	@Override
 	public AuthCredentials extractCredentials(RestRequest request, ThreadContext context) throws ElasticsearchSecurityException {
 		
-		String username = request.hasParam(USERNAME_PARAM_NAME) ? request.param(USERNAME_PARAM_NAME) : null;
-		byte[] password = request.hasParam(PASSWORD_PARAM_NAME) ? request.param(PASSWORD_PARAM_NAME).getBytes(StandardCharsets.UTF_8) : null;
+		final String username = request.hasParam(USERNAME_PARAM_NAME) ? request.param(USERNAME_PARAM_NAME) : null;
+		final byte[] password;
+		if(USE_64_ENCODED_PASSWORD) {
+			password = Base64.getDecoder().decode(request.header(PASSWORD_HEADER_NAME));
+		}
+		else {
+			password = request.header(PASSWORD_HEADER_NAME).getBytes(StandardCharsets.UTF_8);
+		}
     	
     	if (username != null && username.length() > 0 && password != null) {
     		
@@ -62,18 +73,19 @@ public class CustomHttpAuthenticator implements HTTPAuthenticator {
 	    		return credentials;
     		}
     		else {
-    			log.trace("Password can not be empty");
+    			log.info("Password can not be empty");
     			return null;
     		}
     	}
-		log.trace("Username can not be empty");
+		log.info("Username can not be empty");
 		return null;
 	}
 
 	@Override
 	public boolean reRequestAuthentication(RestChannel channel, AuthCredentials credentials) {
-		// needed for challenging, e.g. Basic Authentication or Kerberos. Not needed here.
-		return false;
+		final BytesRestResponse authenticateResponse = new BytesRestResponse(RestStatus.UNAUTHORIZED, "Unauthorized");
+        channel.sendResponse(authenticateResponse);
+        return true;
 	}
 
 }

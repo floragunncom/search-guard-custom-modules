@@ -53,7 +53,7 @@ public class CustomAuthenticationBackend implements AuthenticationBackend {
     public User authenticate(final AuthCredentials credentials) {
     	
     	if(!users.containsKey(credentials.getUsername())) {
-    		log.trace("User {} is unknown", credentials.getUsername());
+    		log.info("User {} is unknown", credentials.getUsername());
     		return null;
     	}
     	
@@ -64,11 +64,11 @@ public class CustomAuthenticationBackend implements AuthenticationBackend {
 	    		return new User(credentials.getUsername(), credentials.getBackendRoles(), credentials);
 	    	}
 	    	else {
-	    		log.trace("Login failed: password incorrect");
+	    		log.info("Login failed: password incorrect");
 	    		return null;
 	    	}
     	}
-		log.trace("Password can not be empty");
+		log.info("Password can not be empty");
 		return null;
     }
 

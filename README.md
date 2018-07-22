@@ -16,7 +16,7 @@ Download and import:
 
 * clone or download this repository
 * import the cloned/downloaded folder into your IDE as a Maven project
-  * e.g. in eclipse go to `File>Import > Maven > Existing Maven Projects` and follow the next steps
+  * e.g. in eclipse go to `File>Import > Maven > Existing Maven Projects` and follow the next steps
 * make changes to the code if you want to and save the changes
 
 Installation into an elasticsearch environment:

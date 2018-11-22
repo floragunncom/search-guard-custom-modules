@@ -1,4 +1,4 @@
-package com.example.customauth;
+package com.floragunn.custom.rdbms;
 
 public class RdbmsAuthException extends RuntimeException {
 

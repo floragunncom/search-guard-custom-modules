@@ -15,7 +15,7 @@
  * 
  */
 
-package com.floragunn.custom;
+package com.floragunn.custom.dummy;
 
 import java.nio.file.Path;
 

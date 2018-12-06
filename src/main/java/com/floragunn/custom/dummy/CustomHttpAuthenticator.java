@@ -14,7 +14,7 @@
  * limitations under the License.
  * 
  */
-package com.floragunn.custom;
+package com.floragunn.custom.dummy;
 
 import java.nio.file.Path;
 import java.security.AccessController;
